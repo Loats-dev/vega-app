@@ -5,7 +5,6 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -14,8 +13,12 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Log everything we receive
+  console.log('BODY TYPE:', typeof req.body);
+  console.log('BODY VALUE:', JSON.stringify(req.body));
+  console.log('API KEY EXISTS:', !!process.env.ANTHROPIC_API_KEY);
+
   try {
-    // Parse body manually in case Vercel didn't parse it
     let body = req.body;
     if (typeof body === 'string') {
       body = JSON.parse(body);
@@ -24,8 +27,9 @@ module.exports = async function handler(req, res) {
     const messages = body?.messages;
     const system   = body?.system || '';
 
+    console.log('MESSAGES:', JSON.stringify(messages));
+
     if (!messages || !Array.isArray(messages)) {
-      console.error('Bad body received:', JSON.stringify(body));
       return res.status(400).json({ error: 'Invalid messages array' });
     }
 
@@ -46,8 +50,10 @@ module.exports = async function handler(req, res) {
 
     const data = await response.json();
 
+    console.log('ANTHROPIC STATUS:', response.status);
+    console.log('ANTHROPIC RESPONSE:', JSON.stringify(data));
+
     if (!response.ok) {
-      console.error('Anthropic error:', JSON.stringify(data));
       return res.status(response.status).json({ error: data.error?.message || 'Anthropic API error' });
     }
 
