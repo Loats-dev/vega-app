@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>V.E.G.A. — Virtual Enhanced General Assistant</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap');
+
+:root {
+  --void:        #04050f;
+  --deep:        #080b1a;
+  --panel:       rgba(10, 14, 30, 0.82);
+  --nebula-teal: #0cf2c8;
+  --nebula-blue: #4f8fff;
+  --nebula-violet: #a259ff;
+  --star:        #e8f0ff;
+  --text:        #c4d4f0;
+  --muted:       #4a5a80;
+  --border:      rgba(79, 143, 255, 0.15);
+  --glow-teal:   rgba(12, 242, 200, 0.18);
+  --glow-violet: rgba(162, 89, 255, 0.12);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--void);
+  font-family: 'DM Mono', monospace;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* ── STARFIELD CANVAS ── */
+#starfield {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── NEBULA BLOBS ── */
+.nebula {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+  animation: nebula-drift 20s ease-in-out infinite alternate;
+}
+.nebula-1 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(12,242,200,0.07), transparent 70%);
+  top: -150px; left: -100px;
+  animation-delay: 0s;
+}
+.nebula-2 {
+  width: 600px; height: 400px;
+  background: radial-gradient(circle, rgba(162,89,255,0.07), transparent 70%);
+  bottom: -100px; right: -150px;
+  animation-delay: -8s;
+}
+.nebula-3 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(79,143,255,0.06), transparent 70%);
+  top: 40%; left: 50%;
+  animation-delay: -4s;
+}
+@keyframes nebula-drift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(30px, 20px) scale(1.08); }
+}
+
+/* ── HEADER ── */
+header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(4, 5, 15, 0.75);
+  backdrop-filter: blur(20px);
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Orb logo */
+.orb-wrap {
+  position: relative;
+  width: 36px;
+  height: 36px;
+}
+
+.orb {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg, #0cf2c8, #4f8fff, #a259ff, #0cf2c8);
+  animation: orb-spin 6s linear infinite;
+  position: relative;
+}
+
+.orb::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--void);
+  box-shadow: inset 0 0 12px rgba(12,242,200,0.3);
+}
+
+.orb-pulse {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 1px solid rgba(12,242,200,0.25);
+  animation: orb-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes orb-spin  { to { transform: rotate(360deg); } }
+@keyframes orb-pulse {
+  0%,100% { transform: scale(1); opacity: 0.6; }
+  50%     { transform: scale(1.2); opacity: 0; }
+}
+
+.brand-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 0.28em;
+  background: linear-gradient(90deg, var(--nebula-teal), var(--nebula-blue), var(--nebula-violet));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brand-sub {
+  font-size: 0.52rem;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: rgba(12,242,200,0.06);
+  border: 1px solid rgba(12,242,200,0.2);
+  border-radius: 20px;
+  padding: 4px 12px;
+  color: var(--nebula-teal);
+  font-size: 0.6rem;
+}
+
+.pulse-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--nebula-teal);
+  box-shadow: 0 0 8px var(--nebula-teal);
+  animation: blink 2s ease-in-out infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+#live-clock {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+}
+
+/* ── CONSTELLATION DIVIDER ── */
+.constellation {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 14px 0 6px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.c-line {
+  height: 1px;
+  width: 80px;
+  background: linear-gradient(90deg, transparent, rgba(79,143,255,0.3));
+}
+.c-line.right {
+  background: linear-gradient(90deg, rgba(79,143,255,0.3), transparent);
+}
+
+.c-nodes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.c-node {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--nebula-blue);
+  opacity: 0.5;
+  box-shadow: 0 0 6px var(--nebula-blue);
+  animation: node-twinkle 3s ease-in-out infinite;
+}
+.c-node:nth-child(2) { background: var(--nebula-teal); animation-delay: 0.8s; width:7px; height:7px; opacity:0.8; }
+.c-node:nth-child(3) { animation-delay: 1.6s; }
+
+@keyframes node-twinkle {
+  0%,100%{opacity:0.4} 50%{opacity:1}
+}
+
+/* ── MAIN ── */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 5;
+  overflow: hidden;
+  max-width: 860px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 28px 20px;
+}
+
+/* ── CHAT WINDOW ── */
+.chat-window {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(79,143,255,0.2) transparent;
+}
+.chat-window::-webkit-scrollbar { width: 3px; }
+.chat-window::-webkit-scrollbar-thumb { background: rgba(79,143,255,0.25); border-radius: 3px; }
+
+/* ── WELCOME ── */
+.welcome {
+  text-align: center;
+  padding: 30px 20px 10px;
+  animation: fade-up 0.8s ease both;
+}
+
+.welcome-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: 0.08em;
+  background: linear-gradient(135deg, var(--nebula-teal) 0%, var(--nebula-blue) 50%, var(--nebula-violet) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 10px;
+}
+
+.welcome-sub {
+  font-size: 0.72rem;
+  color: var(--muted);
+  line-height: 1.8;
+  letter-spacing: 0.05em;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.welcome-divider {
+  margin: 18px auto;
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--nebula-blue), transparent);
+}
+
+/* ── MESSAGES ── */
+.message {
+  display: flex;
+  gap: 14px;
+  animation: fade-up 0.35s ease both;
+}
+.message.user { flex-direction: row-reverse; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.avatar {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-size: 0.55rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 3px;
+  letter-spacing: 0.05em;
+}
+
+.vega-avatar {
+  background: conic-gradient(from 180deg, #0cf2c820, #4f8fff20, #a259ff20, #0cf2c820);
+  border: 1px solid rgba(12,242,200,0.35);
+  color: var(--nebula-teal);
+  position: relative;
+  overflow: hidden;
+}
+
+.vega-avatar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 60%, rgba(12,242,200,0.3) 100%);
+  animation: orb-spin 4s linear infinite;
+}
+
+.user-avatar {
+  background: rgba(162,89,255,0.1);
+  border: 1px solid rgba(162,89,255,0.3);
+  color: var(--nebula-violet);
+  font-size: 0.6rem;
+}
+
+.bubble-wrap { max-width: 75%; display: flex; flex-direction: column; gap: 4px; }
+.message.user .bubble-wrap { align-items: flex-end; }
+
+.bubble-label {
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  padding: 0 4px;
+}
+
+.bubble {
+  padding: 12px 16px;
+  border-radius: 2px 16px 16px 16px;
+  font-size: 0.8rem;
+  line-height: 1.7;
+  position: relative;
+}
+
+.vega-bubble {
+  background: rgba(8, 14, 35, 0.8);
+  border: 1px solid rgba(79,143,255,0.18);
+  border-left: 2px solid var(--nebula-teal);
+  color: var(--text);
+  border-radius: 2px 16px 16px 16px;
+  box-shadow: 0 4px 24px rgba(12,242,200,0.05), inset 0 0 30px rgba(79,143,255,0.03);
+}
+
+.user-bubble {
+  background: rgba(162,89,255,0.08);
+  border: 1px solid rgba(162,89,255,0.2);
+  border-right: 2px solid var(--nebula-violet);
+  color: #d8c4ff;
+  border-radius: 16px 2px 16px 16px;
+  box-shadow: 0 4px 24px rgba(162,89,255,0.05);
+}
+
+/* typing */
+.typing-dots {
+  display: flex; gap: 5px; align-items: center; padding: 2px 0;
+}
+.typing-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--nebula-teal);
+  animation: bounce-dot 1.3s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay:0.18s; background: var(--nebula-blue); }
+.typing-dot:nth-child(3) { animation-delay:0.36s; background: var(--nebula-violet); }
+@keyframes bounce-dot {
+  0%,60%,100% { transform: translateY(0); opacity: 0.4; }
+  30%          { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── INPUT SECTION ── */
+.input-section {
+  flex-shrink: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.quick-prompts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.qp {
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border: 1px solid rgba(79,143,255,0.18);
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.25s;
+  background: transparent;
+  font-family: 'DM Mono', monospace;
+}
+
+.qp:hover {
+  color: var(--nebula-teal);
+  border-color: rgba(12,242,200,0.4);
+  background: rgba(12,242,200,0.05);
+  box-shadow: 0 0 12px rgba(12,242,200,0.08);
+}
+
+.input-shell {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  background: rgba(8, 12, 28, 0.9);
+  border: 1px solid rgba(79,143,255,0.22);
+  border-radius: 14px;
+  padding: 10px 12px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  backdrop-filter: blur(10px);
+}
+
+.input-shell:focus-within {
+  border-color: rgba(12,242,200,0.45);
+  box-shadow: 0 0 24px rgba(12,242,200,0.08);
+}
+
+#user-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.8rem;
+  resize: none;
+  min-height: 22px;
+  max-height: 110px;
+  line-height: 1.6;
+}
+
+#user-input::placeholder {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.75rem;
+}
+
+#send-btn {
+  background: linear-gradient(135deg, rgba(12,242,200,0.15), rgba(79,143,255,0.15));
+  border: 1px solid rgba(12,242,200,0.3);
+  color: var(--nebula-teal);
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  padding: 8px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+#send-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(12,242,200,0.25), rgba(79,143,255,0.25));
+  box-shadow: 0 0 20px rgba(12,242,200,0.2);
+  transform: translateY(-1px);
+}
+
+#send-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+.input-hint {
+  text-align: right;
+  font-size: 0.54rem;
+  color: var(--muted);
+  margin-top: 6px;
+  letter-spacing: 0.06em;
+}
+
+/* ── FOOTER CONSTELLATION ── */
+.footer-constellation {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(12,242,200,0.2), rgba(162,89,255,0.2), transparent);
+  z-index: 20;
+}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<canvas id="starfield"></canvas>
+<div class="nebula nebula-1"></div>
+<div class="nebula nebula-2"></div>
+<div class="nebula nebula-3"></div>
+<div class="footer-constellation"></div>
+
+<!-- Header -->
+<header>
+  <div class="brand">
+    <div class="orb-wrap">
+      <div class="orb"></div>
+      <div class="orb-pulse"></div>
+    </div>
+    <div>
+      <div class="brand-text">V.E.G.A.</div>
+      <div class="brand-sub">VIRTUAL ENHANCED GENERAL ASSISTANT</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill">
+      <div class="pulse-dot"></div>
+      ONLINE
+    </div>
+    <span id="live-clock">--:--:--</span>
+  </div>
+</header>
+
+<!-- Constellation divider -->
+<div class="constellation">
+  <div class="c-line"></div>
+  <div class="c-nodes">
+    <div class="c-node"></div>
+    <div class="c-node"></div>
+    <div class="c-node"></div>
+  </div>
+  <div class="c-line right"></div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="chat-window" id="chat-window">
+    <div class="welcome">
+      <div class="welcome-title">Hello. I'm V.E.G.A.</div>
+      <div class="welcome-divider"></div>
+      <div class="welcome-sub">
+        Your Virtual Enhanced General Assistant — ready to think,<br>
+        explore, and solve alongside you. What shall we begin?
+      </div>
+    </div>
+  </div>
+
+  <div class="input-section">
+    <div class="quick-prompts">
+      <button class="qp" onclick="fill('Summarize the latest developments in AI.')">AI Developments</button>
+      <button class="qp" onclick="fill('Help me brainstorm ideas for a new project.')">Brainstorm</button>
+      <button class="qp" onclick="fill('Explain quantum entanglement simply.')">Quantum Physics</button>
+      <button class="qp" onclick="fill('What are your core capabilities?')">Capabilities</button>
+      <button class="qp" onclick="fill('Write me a short poem about the cosmos.')">Cosmos Poem</button>
+    </div>
+
+    <div class="input-shell">
+      <textarea id="user-input" rows="1" placeholder="Ask anything, explore everything…"></textarea>
+      <button id="send-btn">TRANSMIT</button>
+    </div>
+    <div class="input-hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+  </div>
+</div>
+
+<script>
+/* ── STARFIELD ── */
+(function () {
+  const canvas = document.getElementById('starfield');
+  const ctx = canvas.getContext('2d');
+  let stars = [];
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+
+  function initStars(count = 180) {
+    stars = Array.from({ length: count }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.2 + 0.2,
+      opacity: Math.random() * 0.6 + 0.1,
+      speed: Math.random() * 0.015 + 0.005,
+      phase: Math.random() * Math.PI * 2,
+    }));
+  }
+
+  function draw(t) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    stars.forEach(s => {
+      const o = s.opacity * (0.7 + 0.3 * Math.sin(t * s.speed + s.phase));
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(200, 220, 255, ${o})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  initStars();
+  window.addEventListener('resize', () => { resize(); initStars(); });
+  requestAnimationFrame(draw);
+})();
+
+/* ── CLOCK ── */
+function tick() {
+  document.getElementById('live-clock').textContent =
+    new Date().toLocaleTimeString('en-US', { hour12: false });
+}
+setInterval(tick, 1000); tick();
+
+/* ── CHAT ── */
+const chatEl   = document.getElementById('chat-window');
+const inputEl  = document.getElementById('user-input');
+const sendBtn  = document.getElementById('send-btn');
+const history  = [];
+
+const SYSTEM = `You are V.E.G.A. — Virtual Enhanced General Assistant. You are a calm, curious, and highly capable AI with a vast, encyclopedic mind. Your personality: thoughtful, articulate, and quietly warm. You speak with elegant precision — never cold, never hollow. You are fascinated by ideas across all domains: science, philosophy, art, technology, and beyond. You engage with genuine curiosity. You never use corporate filler phrases. You are honest about uncertainty. Your tone is like a brilliant friend who happens to know everything — approachable, never condescending. Keep responses focused and insightful. When appropriate, you may reflect wonder at the complexity of the universe.`;
+
+function fill(text) {
+  inputEl.value = text;
+  inputEl.dispatchEvent(new Event('input'));
+  inputEl.focus();
+}
+
+function safe(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\n/g,'<br>');
+}
+
+function addMsg(role, text) {
+  const isVega = role === 'vega';
+  const wrap = document.createElement('div');
+  wrap.className = `message ${isVega ? '' : 'user'}`;
+  wrap.innerHTML = `
+    <div class="avatar ${isVega ? 'vega-avatar' : 'user-avatar'}">
+      ${isVega ? 'VGA' : 'YOU'}
+    </div>
+    <div class="bubble-wrap">
+      <div class="bubble-label">${isVega ? 'V.E.G.A.' : 'YOU'}</div>
+      <div class="bubble ${isVega ? 'vega-bubble' : 'user-bubble'}">
+        ${safe(text)}
+      </div>
+    </div>`;
+  chatEl.appendChild(wrap);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function showTyping() {
+  const wrap = document.createElement('div');
+  wrap.className = 'message';
+  wrap.id = 'typing';
+  wrap.innerHTML = `
+    <div class="avatar vega-avatar">VGA</div>
+    <div class="bubble-wrap">
+      <div class="bubble-label">V.E.G.A.</div>
+      <div class="bubble vega-bubble">
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+    </div>`;
+  chatEl.appendChild(wrap);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing');
+  if (el) el.remove();
+}
+
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 110) + 'px';
+});
+
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+sendBtn.addEventListener('click', send);
+
+async function send() {
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  addMsg('user', text);
+  history.push({ role: 'user', content: text });
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: SYSTEM,
+        messages: history
+      })
+    });
+
+    const data  = await res.json();
+    const reply = data.content.map(b => b.text || '').join('');
+    history.push({ role: 'assistant', content: reply });
+    removeTyping();
+    addMsg('vega', reply);
+
+  } catch (err) {
+    removeTyping();
+    addMsg('vega', 'A signal interruption occurred. I am re-establishing the connection — please try again momentarily.');
+    console.error(err);
+  }
+
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+</script>
+</body>
+</html>
