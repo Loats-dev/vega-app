@@ -1,12 +1,11 @@
 // api/chat.js — Serverless function (runs on Vercel's servers, API key is safe here)
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Basic rate limiting hint (Vercel handles most of this automatically)
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   const { messages, system } = req.body;
@@ -20,7 +19,7 @@ export default async function handler(req, res) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,   // ← Key is SECRET, stored in Vercel dashboard
+        'x-api-key': process.env.ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
